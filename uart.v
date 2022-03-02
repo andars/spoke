@@ -8,9 +8,14 @@ module uart(
     input [7:0] tx_byte
 );
 
-localparam CLOCK_HZ = 1_000_000;
+localparam CLOCK_HZ = 12_000_000;
 localparam BAUD_HZ = 9_600;
-localparam CLOCK_DIV_MAX = 9;
+`ifndef FAKE_FREQ
+localparam CLOCK_DIV_MAX_ = CLOCK_HZ / BAUD_HZ;
+`else
+localparam CLOCK_DIV_MAX_ = 9;
+`endif
+localparam CLOCK_DIV_MAX = CLOCK_DIV_MAX_[19:0];
 
 wire reset;
 
