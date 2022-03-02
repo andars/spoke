@@ -11,4 +11,4 @@ sim:
 	$(IVERILOG) tb_uart.sv uart.v && ./a.out
 
 waves: sim
-	$(GTKWAVE) waves.vcd
+	$(GTKWAVE) waves.vcd -S signals.tcl

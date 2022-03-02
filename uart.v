@@ -10,7 +10,7 @@ module uart(
 
 localparam CLOCK_HZ = 1_000_000;
 localparam BAUD_HZ = 9_600;
-localparam CLOCK_DIV_MAX = 10;
+localparam CLOCK_DIV_MAX = 9;
 
 wire reset;
 
