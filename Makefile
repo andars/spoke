@@ -7,7 +7,7 @@ GTKWAVE ?= gtkwave
 lint:
 	$(VERILATOR) --lint-only --top-module uart uart.v
 
-sim:
+sim: lint
 	$(IVERILOG) tb_uart.sv uart.v && ./a.out
 
 waves: sim

@@ -10,6 +10,8 @@ lappend signals "tb_uart.dut.cycle_counter"
 lappend signals "tb_uart.dut.div_pulse"
 lappend signals "tb_uart.dut.tx_shift"
 lappend signals "tb_uart.dut.rx_shift"
+lappend signals "tb_uart.dut.tx_state"
+lappend signals "tb_uart.dut.tx_bit_counter"
 
 set signal_count [ gtkwave::addSignalsFromList $signals ]
 

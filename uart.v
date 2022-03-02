@@ -20,8 +20,6 @@ reg div_pulse;
 reg [7:0] tx_shift;
 reg [7:0] rx_shift;
 
-assign serial_tx = tx_shift[0];
-
 // Clock divider
 always @(posedge clock) begin
     if (reset) begin
@@ -38,6 +36,53 @@ always @(posedge clock) begin
     end
 end
 
+localparam TX_IDLE  = 3'h0;
+localparam TX_START = 3'h1;
+localparam TX_DATA  = 3'h2;
+localparam TX_END   = 3'h3;
+
+reg [2:0] tx_state;
+reg [3:0] tx_bit_counter;
+
+wire new_data;
+wire [7:0] new_data_value;
+assign new_data = 1;
+assign new_data_value = 8'h41; // A
+
+// TX state machine
+always @(posedge clock) begin
+    if (reset) begin
+        tx_state <= 0;
+        tx_bit_counter <= 0;
+    end else if (div_pulse) begin
+        if (tx_state == TX_IDLE) begin
+            if (new_data) begin
+                // there's new data to transmit, move to _START
+                tx_state <= TX_START;
+            end else begin
+                // nothing doing, stay in _IDLE
+                tx_state <= TX_IDLE;
+            end
+        end else if (tx_state == TX_START) begin
+            // move to _DATA after transmitting the start bit
+            tx_state <= TX_DATA;
+            tx_bit_counter <= 7;
+        end else if (tx_state == TX_DATA) begin
+            tx_bit_counter <= tx_bit_counter - 1;
+            if (tx_bit_counter == 0) begin
+                // done with data, move to the stop bit
+                tx_state <= TX_END;
+            end else begin
+                // continue shifting out the data byte
+                tx_state <= TX_DATA;
+            end
+        end else if (tx_state == TX_END) begin
+            // go to idle after one stop bit
+            tx_state <= TX_IDLE;
+        end
+    end
+end
+
 // TX shift register
 always @(posedge clock) begin
     if (reset) begin
@@ -45,8 +90,28 @@ always @(posedge clock) begin
     end
     else begin
         if (div_pulse) begin
-            tx_shift <= {1'b0, tx_shift[7:1]};
+            if (tx_state == TX_DATA) begin
+                tx_shift <= {1'b0, tx_shift[7:1]};
+            end if (tx_state == TX_START) begin
+                tx_shift <= new_data_value;
+            end
         end
+    end
+end
+
+// TX output signal select
+reg _serial_tx;
+assign serial_tx = _serial_tx;
+
+always @(*) begin
+    if (tx_state == TX_IDLE) begin
+        _serial_tx = 1;
+    end else if (tx_state == TX_START) begin
+        _serial_tx = 0;
+    end else if (tx_state == TX_DATA) begin
+        _serial_tx = tx_shift[0];
+    end else if (tx_state == TX_END) begin
+        _serial_tx = 1;
     end
 end
 
