@@ -104,6 +104,7 @@ reg _serial_tx;
 assign serial_tx = _serial_tx;
 
 always @(*) begin
+    _serial_tx = 1;
     if (tx_state == TX_IDLE) begin
         _serial_tx = 1;
     end else if (tx_state == TX_START) begin
