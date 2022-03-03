@@ -121,6 +121,81 @@ always @(*) begin
     end
 end
 
+localparam RX_IDLE = 3'h0;
+localparam RX_START = 3'h1;
+localparam RX_DATA = 3'h2;
+localparam RX_END = 3'h3;
+reg [2:0] rx_state;
+reg [3:0] rx_bit_counter;
+
+reg [19:0] rx_timer;
+reg rx_sample_pulse;
+
+// RX state machine
+always @(posedge clock) begin
+    if (reset) begin
+        rx_state <= RX_IDLE;
+        rx_timer <= 0;
+        rx_bit_counter <= 0;
+        rx_sample_pulse <= 0;
+    end else begin
+        rx_sample_pulse <= 0;
+
+        if (rx_state == RX_IDLE) begin
+            // TODO: add some synchronizers for serial_rx
+            if (serial_rx == 0) begin
+                // when serial_rx goes low, move to _START.
+                // TODO: do some debouncing here
+                rx_state <= RX_START;
+
+                rx_timer <= CLOCK_DIV_MAX;
+            end
+        end else if (rx_state == RX_START) begin
+            if (rx_timer == 0) begin
+                // after one bit period, move to _DATA;
+                rx_state <= RX_DATA;
+                rx_bit_counter <= 7;
+
+                // and wait half a bit period to sample in the center of each
+                // data bit
+                rx_timer <= CLOCK_DIV_MAX / 2;
+            end else begin
+                rx_timer <= rx_timer - 1;
+            end
+        end else if (rx_state == RX_DATA) begin
+            if (rx_timer == 0) begin
+                rx_sample_pulse <= 1;
+                rx_bit_counter <= rx_bit_counter - 1;
+                rx_timer <= CLOCK_DIV_MAX;
+                if (rx_bit_counter == 0) begin
+                    rx_state <= RX_END;
+                end
+            end else begin
+                rx_sample_pulse <= 0;
+                rx_timer <= rx_timer - 1;
+            end
+        end else if (rx_state == RX_END) begin
+            if (rx_timer == 0) begin
+                rx_state <= RX_IDLE;
+            end else begin
+                rx_timer <= rx_timer - 1;
+            end
+        end
+    end
+end
+
+// RX shift register
+always @(posedge clock) begin
+    if (reset) begin
+        rx_shift <= 0;
+    end
+    else begin
+        if (rx_sample_pulse) begin
+            rx_shift <= {rx_shift[6:0], serial_rx};
+        end
+    end
+end
+
 // Reset generator
 reg [3:0] reset_counter = 0;
 assign reset = (reset_counter < 4'hf);

@@ -7,7 +7,7 @@ reg clock;
 wire sync;
 wire [3:0] data;
 
-wire serial_rx;
+reg serial_rx;
 wire [7:0] rx_byte;
 wire serial_tx;
 wire [7:0] tx_byte;
@@ -26,6 +26,25 @@ end
 
 always begin
     #10 clock = ~clock;
+end
+
+initial begin
+    serial_rx = 1;
+    // start bit
+    #1000 serial_rx = 0;
+
+    // data bits
+    #200 serial_rx = 1;
+    #200 serial_rx = 0;
+    #200 serial_rx = 1;
+    #200 serial_rx = 0;
+    #200 serial_rx = 1;
+    #200 serial_rx = 1;
+    #200 serial_rx = 0;
+    #200 serial_rx = 0;
+
+    // stop bit & idle
+    #200 serial_rx = 1;
 end
 
 integer i;
