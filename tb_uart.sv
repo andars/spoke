@@ -5,7 +5,6 @@ module tb_uart();
 
 reg clock;
 wire sync;
-wire [3:0] data;
 
 reg serial_rx;
 wire [7:0] rx_byte;
@@ -28,26 +27,32 @@ always begin
     #10 clock = ~clock;
 end
 
-initial begin
-    serial_rx = 1;
-    // start bit
-    #1000 serial_rx = 0;
-
-    // data bits
-    #200 serial_rx = 1;
-    #200 serial_rx = 0;
-    #200 serial_rx = 1;
-    #200 serial_rx = 0;
-    #200 serial_rx = 1;
-    #200 serial_rx = 1;
-    #200 serial_rx = 0;
-    #200 serial_rx = 0;
-
-    // stop bit & idle
-    #200 serial_rx = 1;
-end
+reg [7:0] rx_data;
 
 integer i;
+initial begin
+    serial_rx = 1;
+    for (i = 0; i < 5; i++) begin
+        rx_data = 8'hac + i;
+
+        // start bit
+        #1000 serial_rx = 0;
+
+        // data bits
+        #200 serial_rx = rx_data[0];
+        #200 serial_rx = rx_data[1];
+        #200 serial_rx = rx_data[2];
+        #200 serial_rx = rx_data[3];
+        #200 serial_rx = rx_data[4];
+        #200 serial_rx = rx_data[5];
+        #200 serial_rx = rx_data[6];
+        #200 serial_rx = rx_data[7];
+
+        // stop bit & idle
+        #200 serial_rx = 1;
+    end
+end
+
 initial begin
     $dumpfile("waves.vcd");
     $dumpvars;

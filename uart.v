@@ -138,6 +138,7 @@ always @(posedge clock) begin
         rx_timer <= 0;
         rx_bit_counter <= 0;
         rx_sample_pulse <= 0;
+        rx_byte <= 0;
     end else begin
         rx_sample_pulse <= 0;
 
@@ -177,6 +178,7 @@ always @(posedge clock) begin
         end else if (rx_state == RX_END) begin
             if (rx_timer == 0) begin
                 rx_state <= RX_IDLE;
+                rx_byte <= rx_shift;
             end else begin
                 rx_timer <= rx_timer - 1;
             end
@@ -191,7 +193,7 @@ always @(posedge clock) begin
     end
     else begin
         if (rx_sample_pulse) begin
-            rx_shift <= {rx_shift[6:0], serial_rx};
+            rx_shift <= {serial_rx, rx_shift[7:1]};
         end
     end
 end
