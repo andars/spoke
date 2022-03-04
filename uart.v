@@ -52,7 +52,7 @@ reg [3:0] tx_bit_counter;
 wire new_data;
 wire [7:0] new_data_value;
 assign new_data = 1;
-assign new_data_value = 8'h41; // A
+assign new_data_value = rx_byte; // 8'h41; // A
 
 // TX state machine
 always @(posedge clock) begin
