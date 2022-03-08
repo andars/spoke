@@ -4,6 +4,8 @@
 module tb_uart();
 
 reg clock;
+reg reset;
+
 wire sync;
 
 reg serial_rx;
@@ -19,6 +21,7 @@ wire tx_ready;
 
 uart dut(
     .clock(clock),
+    .reset(reset),
     .serial_rx(serial_rx),
     .rx_byte(rx_byte),
     .rx_valid(rx_valid),
@@ -32,6 +35,7 @@ uart dut(
 initial begin
     clock = 0;
     rx_ready = 0;
+    reset = 1;
 end
 
 always begin
@@ -44,8 +48,11 @@ integer i;
 
 initial begin
     tx_valid = 0;
-    // wait for reset to go low
-    #1000;
+
+    // wait a while before deasserting reset
+    #200;
+    reset = 0;
+    #500;
 
     for (i = 0; i < 5; i++) begin
         tx_byte = 8'h55 + i;

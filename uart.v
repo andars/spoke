@@ -2,6 +2,7 @@
 
 module uart(
     input clock,
+    input reset,
     input serial_rx,
     input rx_ready,
     output reg rx_valid,
@@ -21,7 +22,6 @@ localparam CLOCK_DIV_MAX_ = 9;
 `endif
 localparam CLOCK_DIV_MAX = CLOCK_DIV_MAX_[19:0];
 
-wire reset;
 
 reg [7:0] tx_shift;
 reg [7:0] rx_shift;
@@ -213,17 +213,6 @@ always @(posedge clock) begin
         if (rx_sample_pulse) begin
             rx_shift <= {serial_rx, rx_shift[7:1]};
         end
-    end
-end
-
-// Reset generator
-reg [3:0] reset_counter = 0;
-assign reset = (reset_counter < 4'hf);
-always @(posedge clock) begin
-    if (reset) begin
-        reset_counter <= reset_counter + 1;
-    end else begin
-        reset_counter <= reset_counter;
     end
 end
 
