@@ -4,11 +4,14 @@ GTKWAVE ?= gtkwave
 
 .PHONY: lint sim waves
 
+SOURCES = uart.v top.v
+TOP = top
+
 lint:
-	$(VERILATOR) --lint-only --top-module uart uart.v
+	$(VERILATOR) --lint-only --top-module $(TOP) $(SOURCES)
 
 sim: lint
-	$(IVERILOG) -DFAKE_FREQ tb_uart.sv uart.v && ./a.out
+	$(IVERILOG) -DFAKE_FREQ tb_uart.sv $(SOURCES) && ./a.out
 
 waves: sim
 	$(GTKWAVE) waves.vcd -S signals.tcl
@@ -23,4 +26,4 @@ _out/uart.asc: _out/uart.json pins.pcf
 	nextpnr-ice40 -ql _out/uart.nplog --up5k --package sg48 --freq 12 --asc $@ --pcf pins.pcf --pcf-allow-unconstrained --json $<
 
 _out/uart.json: uart.v | lint
-	yosys -ql _out/uart.yslog -p 'synth_ice40 -top uart -json $@' uart.v
+	yosys -ql _out/uart.yslog -p 'synth_ice40 -top $(TOP) -json $@' $(SOURCES)
