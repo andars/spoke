@@ -9,7 +9,7 @@ module top(
 
 wire reset;
 
-wire [7:0] tx_byte;
+reg [7:0] tx_byte;
 
 wire rx_valid;
 reg rx_ready;
@@ -29,6 +29,23 @@ uart uart0(
     .tx_valid(tx_valid),
     .tx_ready(tx_ready)
 );
+
+always @(posedge clock) begin
+    if (reset) begin
+        tx_valid <= 0;
+        rx_ready <= 1;
+    end
+    else if (rx_ready && rx_valid) begin
+        rx_ready <= 0;
+        // loopback
+        tx_byte <= rx_byte;
+        tx_valid <= 1;
+    end
+    else if (tx_ready && tx_valid) begin
+        tx_valid <= 0;
+        rx_ready <= 1;
+    end
+end
 
 // Reset generator
 reg [3:0] reset_counter = 0;

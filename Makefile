@@ -2,7 +2,7 @@ VERILATOR ?= verilator
 IVERILOG ?= iverilog
 GTKWAVE ?= gtkwave
 
-.PHONY: lint sim waves
+.PHONY: lint sim waves sim-top waves-top
 
 SOURCES = uart.v top.v
 TOP = top
@@ -15,6 +15,12 @@ sim: lint
 
 waves: sim
 	$(GTKWAVE) waves.vcd -S signals.tcl
+
+sim-top: lint
+	$(IVERILOG) -DFAKE_FREQ tb_top.sv $(SOURCES) && ./a.out
+
+waves-top: sim-top
+	$(GTKWAVE) waves-top.vcd -S signals-top.tcl
 
 _out/uart.bin: _out/uart.asc
 	icepack $< $@
