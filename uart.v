@@ -3,9 +3,13 @@
 module uart(
     input clock,
     input serial_rx,
+    input rx_ready,
+    output reg rx_valid,
     output reg [7:0] rx_byte,
     output serial_tx,
-    input [7:0] tx_byte
+    input [7:0] tx_byte,
+    input tx_valid,
+    output tx_ready
 );
 
 localparam CLOCK_HZ = 12_000_000;
@@ -19,27 +23,8 @@ localparam CLOCK_DIV_MAX = CLOCK_DIV_MAX_[19:0];
 
 wire reset;
 
-reg [19:0] cycle_counter;
-reg div_pulse;
-
 reg [7:0] tx_shift;
 reg [7:0] rx_shift;
-
-// Clock divider
-always @(posedge clock) begin
-    if (reset) begin
-        cycle_counter <= 0;
-        div_pulse <= 0;
-    end else begin
-        if (cycle_counter == CLOCK_DIV_MAX) begin
-            cycle_counter <= 0;
-            div_pulse <= 1;
-        end else begin
-            cycle_counter <= cycle_counter + 1;
-            div_pulse <= 0;
-        end
-    end
-end
 
 localparam TX_IDLE  = 3'h0;
 localparam TX_START = 3'h1;
@@ -49,41 +34,62 @@ localparam TX_END   = 3'h3;
 reg [2:0] tx_state;
 reg [3:0] tx_bit_counter;
 
-wire new_data;
-wire [7:0] new_data_value;
-assign new_data = 1;
-assign new_data_value = rx_byte; // 8'h41; // A
+reg [19:0] tx_timer;
+
+assign tx_ready = (tx_state == TX_IDLE);
 
 // TX state machine
 always @(posedge clock) begin
     if (reset) begin
         tx_state <= 0;
         tx_bit_counter <= 0;
-    end else if (div_pulse) begin
-        if (tx_state == TX_IDLE) begin
-            if (new_data) begin
-                // there's new data to transmit, move to _START
-                tx_state <= TX_START;
-            end else begin
-                // nothing doing, stay in _IDLE
-                tx_state <= TX_IDLE;
-            end
-        end else if (tx_state == TX_START) begin
+    end
+    else if (tx_state == TX_IDLE) begin
+        if (tx_valid) begin
+            // there's new data to transmit, move to _START
+            tx_state <= TX_START;
+            tx_timer <= CLOCK_DIV_MAX;
+        end else begin
+            // nothing doing, stay in _IDLE
+            tx_state <= TX_IDLE;
+        end
+    end
+    else if (tx_state == TX_START) begin
+        if (tx_timer == 0) begin
             // move to _DATA after transmitting the start bit
             tx_state <= TX_DATA;
             tx_bit_counter <= 7;
-        end else if (tx_state == TX_DATA) begin
+            tx_timer <= CLOCK_DIV_MAX;
+        end
+        else begin
+            tx_timer <= tx_timer - 1;
+        end
+    end
+    else if (tx_state == TX_DATA) begin
+        if (tx_timer == 0) begin
             tx_bit_counter <= tx_bit_counter - 1;
             if (tx_bit_counter == 0) begin
                 // done with data, move to the stop bit
                 tx_state <= TX_END;
-            end else begin
+                tx_timer <= CLOCK_DIV_MAX;
+            end
+            else begin
                 // continue shifting out the data byte
                 tx_state <= TX_DATA;
+                tx_timer <= CLOCK_DIV_MAX;
             end
-        end else if (tx_state == TX_END) begin
+        end
+        else begin
+            tx_timer <= tx_timer - 1;
+        end
+    end
+    else if (tx_state == TX_END) begin
+        if (tx_timer == 0) begin
             // go to idle after one stop bit
             tx_state <= TX_IDLE;
+        end
+        else begin
+            tx_timer <= tx_timer - 1;
         end
     end
 end
@@ -94,12 +100,10 @@ always @(posedge clock) begin
         tx_shift <= 8'haa;
     end
     else begin
-        if (div_pulse) begin
-            if (tx_state == TX_DATA) begin
-                tx_shift <= {1'b0, tx_shift[7:1]};
-            end if (tx_state == TX_START) begin
-                tx_shift <= new_data_value;
-            end
+        if ((tx_state == TX_DATA) && (tx_timer == 0)) begin
+            tx_shift <= {1'b0, tx_shift[7:1]};
+        end if ((tx_state == TX_IDLE) && tx_valid) begin
+            tx_shift <= tx_byte;
         end
     end
 end
@@ -182,6 +186,20 @@ always @(posedge clock) begin
             end else begin
                 rx_timer <= rx_timer - 1;
             end
+        end
+    end
+end
+
+always @(posedge clock) begin
+    if (reset) begin
+        rx_valid <= 0;
+    end
+    else begin
+        if ((rx_state == RX_END) && (rx_timer == 0)) begin
+            rx_valid <= 1;
+        end
+        else if (rx_valid && rx_ready) begin
+            rx_valid <= 0;
         end
     end
 end
