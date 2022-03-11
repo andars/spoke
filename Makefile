@@ -22,6 +22,17 @@ sim-top: lint
 waves-top: sim-top
 	$(GTKWAVE) waves-top.vcd -S signals-top.tcl
 
+WB_SOURCES = uart.v uart_wb_master.v wb_top.v wb_slave_ex.v
+
+lint-wb:
+	$(VERILATOR) --lint-only --top-module wb_top $(WB_SOURCES)
+
+sim-wb: lint-wb
+	$(IVERILOG) -g2005-sv -DFAKE_FREQ -s tb_wb_top tb_wb_top.sv $(WB_SOURCES) && ./a.out
+
+waves-wb: sim-wb
+	$(GTKWAVE) waves-wb-top.vcd -S signals-wb-top.tcl
+
 _out/uart.bin: _out/uart.asc
 	icepack $< $@
 
