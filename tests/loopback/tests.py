@@ -27,7 +27,13 @@ async def test_uart_loopback(dut):
     for v in values:
         dut._log.info("  {:x}".format(v))
 
-    recv = await uart_rx.read()
+    recv = []
+    while len(recv) < len(values):
+        recv += await uart_rx.read()
+        dut._log.info("received bytes, length is {}".format(len(recv)))
+
     dut._log.info("received:")
     for r in recv:
         dut._log.info("  {:x}".format(r))
+
+    assert recv == values
