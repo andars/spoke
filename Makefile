@@ -2,25 +2,25 @@ VERILATOR ?= verilator
 IVERILOG ?= iverilog
 GTKWAVE ?= gtkwave
 
-.PHONY: lint sim waves sim-top waves-top
+.PHONY: lint sim waves sim-loopback waves-loopback
 
-SOURCES = uart.v top.v
-TOP = top
+SOURCES = uart.v loopback.v
+TOP = loopback
 
 lint:
 	$(VERILATOR) --lint-only --top-module $(TOP) $(SOURCES)
 
 sim: lint
-	$(IVERILOG) -DFAKE_FREQ tb_uart.sv $(SOURCES) && ./a.out
+	$(IVERILOG) -DFAKE_FREQ -s tb_uart tb_uart.sv $(SOURCES) && ./a.out
 
 waves: sim
 	$(GTKWAVE) waves.vcd -S signals.tcl
 
-sim-top: lint
-	$(IVERILOG) -DFAKE_FREQ tb_top.sv $(SOURCES) && ./a.out
+sim-loopback: lint
+	$(IVERILOG) -DFAKE_FREQ tb_loopback.sv $(SOURCES) && ./a.out
 
-waves-top: sim-top
-	$(GTKWAVE) waves-top.vcd -S signals-top.tcl
+waves-loopback: sim-loopback
+	$(GTKWAVE) waves-loopback.vcd -S signals-loopback.tcl
 
 WB_SOURCES = uart.v uart_wb_master.v wb_top.v wb_slave_ex.v
 

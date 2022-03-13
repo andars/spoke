@@ -1,6 +1,6 @@
 `default_nettype none
 
-module top(
+module loopback(
     input clock,
     input serial_rx,
     output [7:0] rx_byte,

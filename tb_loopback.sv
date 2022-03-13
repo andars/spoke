@@ -8,7 +8,7 @@ reg serial_rx;
 wire rx_byte;
 wire serial_tx;
 
-top dut(
+loopback dut(
     .clock(clock),
     .serial_rx(serial_rx),
     .rx_byte(rx_byte),
@@ -49,7 +49,7 @@ initial begin
 end
 
 initial begin
-    $dumpfile("waves-top.vcd");
+    $dumpfile("waves-loopback.vcd");
     $dumpvars;
 
     repeat(9000) @(posedge clock);
