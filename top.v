@@ -58,4 +58,12 @@ always @(posedge clock) begin
     end
 end
 
+`ifdef COCOTB_SIM
+initial begin
+    $dumpfile ("loopback.vcd");
+    $dumpvars;
+    #1;
+end
+`endif
+
 endmodule
