@@ -33,14 +33,19 @@ sim-wb: lint-wb
 waves-wb: sim-wb
 	$(GTKWAVE) waves-wb-top.vcd -S signals-wb-top.tcl
 
-_out/uart.bin: _out/uart.asc
-	icepack $< $@
+define ICE40_RULES
+_out/$(strip $1).bin: _out/$(strip $1).asc _out/$(strip $1)_timing.txt
+	icepack $$< $$@
 
-_out/uart_timing.txt: _out/uart.asc
-	icetime -d up5k -c 12 -mtr $@ $<
+_out/$(strip $1)_timing.txt: _out/$(strip $1).asc
+	icetime -d up5k -c 12 -mtr $$@ $$<
 
-_out/uart.asc: _out/uart.json pins.pcf
-	nextpnr-ice40 -ql _out/uart.nplog --up5k --package sg48 --freq 12 --asc $@ --pcf pins.pcf --pcf-allow-unconstrained --json $<
+_out/$(strip $1).asc: _out/$(strip $1).json $(strip $1)-pins.pcf
+	nextpnr-ice40 -ql _out/$(strip $1).nplog --up5k --package sg48 --freq 12 --asc $$@ --pcf $(strip $1)-pins.pcf --pcf-allow-unconstrained --json $$< --verbose --debug
 
-_out/uart.json: $(SOURCES) | lint
-	yosys -ql _out/uart.yslog -p 'synth_ice40 -top $(TOP) -json $@' $(SOURCES)
+_out/$(strip $1).json: $2 | $3
+	yosys -ql _out/$(strip $1).yslog -p 'synth_ice40 -top $(strip $1) -json $$@' $2
+endef
+
+$(eval $(call ICE40_RULES, loopback, $(SOURCES), lint))
+$(eval $(call ICE40_RULES, wb_top, $(WB_SOURCES), lint))
