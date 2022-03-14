@@ -2,7 +2,7 @@ SELF:=$(lastword $(MAKEFILE_LIST))
 OUT=$(realpath $(dir $(SELF))/..)/_out/tests
 $(info writing test output to $(OUT))
 
-TEST_MODULES := loopback
+TEST_MODULES := loopback uart-wb
 
 .PHONY: all $(TEST_MODULES)
 
