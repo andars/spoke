@@ -56,14 +56,31 @@ static uint32_t spoke_read_v(uint32_t addr) {
 int main(int argc, char *argv[]) {
     serial_open(FILENAME);
 
+    uint32_t wr0, rd0;
+    uint32_t wr1, rd1;
+
     // write to an even address
-    spoke_write_v(0x77bbaa88, 0xaa223311);
+    wr0 = 0xaa223311;
+    spoke_write_v(0x77bbaa88, wr0);
 
     // read it back
-    (void)spoke_read_v(0x77bbaa88);
+    rd0 = spoke_read_v(0x77bbaa88);
+    ASSERT_EQ(wr0, rd0);
 
     // read back an odd address
     (void)spoke_read_v(0x99eedd89);
+
+    // write to an odd address
+    wr1 = 0xaabbccdd;
+    spoke_write_v(0x99eedd89, wr1);
+
+    // read it back
+    rd1 = spoke_read_v(0x99eedd89);
+    ASSERT_EQ(wr1, rd1);
+
+    // check that the even register did not change
+    rd0 = spoke_read_v(0x77bbaa88);
+    ASSERT_EQ(wr0, rd0);
 
     printf("done\n");
 }

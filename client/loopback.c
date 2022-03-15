@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "common.h"
 #include "serial.h"
 
 #define FILENAME "/dev/ttyUSB1"
@@ -18,6 +19,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 256; i++) {
         uint8_t c = recvbyte();
         printf("received 0x%x\n", c);
+        ASSERT_EQ(c, i);
     }
     printf("---\n");
 }

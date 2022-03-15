@@ -18,4 +18,13 @@
         exit(EXIT_FAILURE); \
     } while (0);
 
+#define ASSERT_EQ(a, b) \
+    do { \
+        int _a = (a); \
+        int _b = (b); \
+        if ((_a) != (_b)) { \
+            FAIL("%s (0x%x) != %s (0x%x)\n", #a, _a, #b, _b); \
+        } \
+    } while (0)
+
 #endif
