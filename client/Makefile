@@ -3,14 +3,21 @@ OUT=$(realpath $(dir $(SELF))/..)/_out/client
 
 CFLAGS += -Wall -Werror
 
-all: $(OUT)/spoke $(OUT)/serial
+SRC:=$(wildcard *.c)
+OBJ:=$(SRC:%.c=$(OUT)/%.o)
+DEP:=$(SRC:%.c=$(OUT)/%.d)
 
-$(OUT)/spoke: $(OUT)/spoke.o
+all: $(OUT)/spoke $(OUT)/loopback
 
-$(OUT)/serial: $(OUT)/serial.o
+$(OUT)/spoke: $(OUT)/spoke.o $(OUT)/serial.o
 
-$(OUT)/%.o: %.c $(OUT)
-	$(CC) -c $(CFLAGS) -o $@ $<
+$(OUT)/loopback: $(OUT)/loopback.o $(OUT)/serial.o
+
+$(OBJ): $(OUT)/%.o: %.c $(OUT)/%.d | $(OUT)
+	$(CC) -MT $@ -MMD -MP -MF $(OUT)/$*.d -o $@ -c $(CFLAGS) $<
 
 $(OUT):
 	mkdir -p $@
+
+$(DEP):
+include $(wildcard $(DEPS))
