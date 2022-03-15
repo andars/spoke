@@ -25,6 +25,8 @@ wire tx_ready;
 reg tx_valid;
 reg [7:0] tx_byte;
 
+wire dropped;
+
 uart uart0(
     .clock(clock),
     .reset(reset),
@@ -35,7 +37,8 @@ uart uart0(
     .serial_tx(serial_tx),
     .tx_ready(tx_ready),
     .tx_valid(tx_valid),
-    .tx_byte(tx_byte)
+    .tx_byte(tx_byte),
+    .dropped(dropped)
 );
 
 always @(posedge clock) begin

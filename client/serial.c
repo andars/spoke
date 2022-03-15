@@ -21,8 +21,8 @@ void serial_open(const char *filename) {
     struct termios options = { 0 };
 
     cfmakeraw(&options);
-    cfsetispeed(&options, B9600);
-    cfsetospeed(&options, B9600);
+    cfsetispeed(&options, B57600);
+    cfsetospeed(&options, B57600);
     options.c_cflag |= CLOCAL | CREAD;
     options.c_cc[VTIME] = 0;
     options.c_cc[VMIN] = 1;

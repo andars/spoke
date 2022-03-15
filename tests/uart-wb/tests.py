@@ -6,6 +6,8 @@ from cocotbext.uart import UartSource, UartSink
 from cocotbext.wishbone.monitor import WishboneSlave
 from cocotbext.wishbone.driver import WBOp
 
+BAUD = 57600
+
 def incrementing():
     n = 1;
     while True:
@@ -30,8 +32,8 @@ async def test_uart_to_wishbone(dut):
                                         },
                            datgen=incrementing())
 
-    uart_tx = UartSource(dut.serial_rx, baud=9600, bits=8)
-    uart_rx = UartSink(dut.serial_tx, baud=9600, bits=8)
+    uart_tx = UartSource(dut.serial_rx, baud=BAUD, bits=8)
+    uart_rx = UartSink(dut.serial_tx, baud=BAUD, bits=8)
 
     # reset
     dut.reset.value = 1

@@ -10,17 +10,18 @@ module uart(
     output serial_tx,
     input [7:0] tx_byte,
     input tx_valid,
-    output tx_ready
+    output tx_ready,
+    output reg dropped
 );
+parameter BAUD_HZ = 57600;
+parameter CLOCK_HZ = 12_000_000;
 
-localparam CLOCK_HZ = 12_000_000;
-localparam BAUD_HZ = 9_600;
 `ifndef FAKE_FREQ
 localparam CLOCK_DIV_MAX_ = CLOCK_HZ / BAUD_HZ;
 `else
 localparam CLOCK_DIV_MAX_ = 9;
 `endif
-localparam CLOCK_DIV_MAX = CLOCK_DIV_MAX_[19:0];
+localparam CLOCK_DIV_MAX = CLOCK_DIV_MAX_[$clog2(CLOCK_DIV_MAX_)-1:0];
 
 
 reg [7:0] tx_shift;
@@ -34,7 +35,7 @@ localparam TX_END   = 3'h3;
 reg [2:0] tx_state;
 reg [3:0] tx_bit_counter;
 
-reg [19:0] tx_timer;
+reg [$clog2(CLOCK_DIV_MAX)-1:0] tx_timer;
 
 assign tx_ready = (tx_state == TX_IDLE);
 
@@ -102,7 +103,8 @@ always @(posedge clock) begin
     else begin
         if ((tx_state == TX_DATA) && (tx_timer == 0)) begin
             tx_shift <= {1'b0, tx_shift[7:1]};
-        end if ((tx_state == TX_IDLE) && tx_valid) begin
+        end
+        else if ((tx_state == TX_IDLE) && tx_valid) begin
             tx_shift <= tx_byte;
         end
     end
@@ -132,7 +134,7 @@ localparam RX_END = 3'h3;
 reg [2:0] rx_state;
 reg [3:0] rx_bit_counter;
 
-reg [19:0] rx_timer;
+reg [$clog2(CLOCK_DIV_MAX)-1:0] rx_timer;
 reg rx_sample_pulse;
 
 // RX state machine
@@ -193,9 +195,13 @@ end
 always @(posedge clock) begin
     if (reset) begin
         rx_valid <= 0;
+        dropped <= 0;
     end
     else begin
         if ((rx_state == RX_END) && (rx_timer == 0)) begin
+            if (rx_valid) begin
+                dropped <= 1;
+            end
             rx_valid <= 1;
         end
         else if (rx_valid && rx_ready) begin

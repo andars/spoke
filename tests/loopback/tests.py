@@ -4,14 +4,16 @@ from cocotb.clock import Clock
 from cocotb.triggers import Timer
 from cocotbext.uart import UartSource, UartSink
 
+BAUD = 57600
+
 @cocotb.test()
 async def test_uart_loopback(dut):
     # start a 12 MHz clock
     clock = Clock(dut.clock, round(1e3/12), units="ns")
     cocotb.start_soon(clock.start())
 
-    uart_tx = UartSource(dut.serial_rx, baud=9600, bits=8)
-    uart_rx = UartSink(dut.serial_tx, baud=9600, bits=8)
+    uart_tx = UartSource(dut.serial_rx, baud=BAUD, bits=8)
+    uart_rx = UartSink(dut.serial_tx, baud=BAUD, bits=8)
 
     # wait for loopback to come out of reset
     await Timer(5, units="us")

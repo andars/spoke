@@ -9,6 +9,8 @@ module loopback(
 
 wire reset;
 
+wire dropped;
+
 reg [7:0] tx_byte;
 
 wire rx_valid;
@@ -27,7 +29,8 @@ uart uart0(
     .serial_tx(serial_tx),
     .tx_byte(tx_byte),
     .tx_valid(tx_valid),
-    .tx_ready(tx_ready)
+    .tx_ready(tx_ready),
+    .dropped(dropped)
 );
 
 always @(posedge clock) begin

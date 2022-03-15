@@ -4,6 +4,8 @@ GTKWAVE ?= gtkwave
 
 .PHONY: lint sim waves sim-loopback waves-loopback
 
+all: _out/loopback.bin _out/wb_top.bin
+
 SOURCES = uart.v loopback.v
 TOP = loopback
 
