@@ -20,4 +20,4 @@ $(OUT):
 	mkdir -p $@
 
 $(DEP):
-include $(wildcard $(DEPS))
+include $(wildcard $(DEP))
