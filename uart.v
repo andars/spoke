@@ -137,6 +137,14 @@ reg [3:0] rx_bit_counter;
 reg [$clog2(CLOCK_DIV_MAX)-1:0] rx_timer;
 reg rx_sample_pulse;
 
+// 2FF synchronizer for asynchronous RX input
+reg serial_rx_1;
+reg serial_rx_in;
+always @(posedge clock) begin
+    serial_rx_1 <= serial_rx;
+    serial_rx_in <= serial_rx_1;
+end
+
 // RX state machine
 always @(posedge clock) begin
     if (reset) begin
@@ -149,9 +157,8 @@ always @(posedge clock) begin
         rx_sample_pulse <= 0;
 
         if (rx_state == RX_IDLE) begin
-            // TODO: add some synchronizers for serial_rx
-            if (serial_rx == 0) begin
-                // when serial_rx goes low, move to _START.
+            if (serial_rx_in == 0) begin
+                // when serial_rx_in goes low, move to _START.
                 // TODO: do some debouncing here
                 rx_state <= RX_START;
 
@@ -217,7 +224,7 @@ always @(posedge clock) begin
     end
     else begin
         if (rx_sample_pulse) begin
-            rx_shift <= {serial_rx, rx_shift[7:1]};
+            rx_shift <= {serial_rx_in, rx_shift[7:1]};
         end
     end
 end
