@@ -10,10 +10,10 @@ SOURCES = uart.v loopback.v
 TOP = loopback
 
 lint:
-	$(VERILATOR) --lint-only --top-module $(TOP) $(SOURCES)
+	$(VERILATOR) -Wall -Wno-UNUSED --lint-only --top-module $(TOP) $(SOURCES)
 
 sim: lint
-	$(IVERILOG) -DFAKE_FREQ -s tb_uart tb_uart.sv $(SOURCES) && ./a.out
+	$(IVERILOG) -Wall -DFAKE_FREQ -s tb_uart tb_uart.sv $(SOURCES) && ./a.out
 
 waves: sim
 	$(GTKWAVE) waves.vcd -S signals.tcl
